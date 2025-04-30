@@ -1,0 +1,36 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Deploy Azure Functions",
+            "type": "shell",
+            "command": "PowerShell -ExecutionPolicy Bypass -File ${workspaceFolder}/deploy_azure_functions.ps1",
+            "windows": {
+                "command": "PowerShell -ExecutionPolicy Bypass -File ${workspaceFolder}\\deploy_azure_functions.ps1"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Deploy Azure Functions (Batch)",
+            "type": "shell",
+            "command": "${workspaceFolder}/deploy_azure_functions.bat",
+            "windows": {
+                "command": "${workspaceFolder}\\deploy_azure_functions.bat"
+            },
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "problemMatcher": []
+        }
+    ]
+}

@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Career Guidance Chatbot</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            overflow-x: hidden;
+        }
+        .main-container {
+            height: 100vh;
+            display: flex;
+        }
+        .sidebar {
+            width: 280px;
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px;
+            overflow-y: auto;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            transition: all 0.3s;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+        .sidebar-header {
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+        .sidebar-header h5 {
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+            color: #ecf0f1;
+        }
+        .sidebar-header p {
+            opacity: 0.7;
+            font-size: 0.8rem;
+        }
+        .sidebar-toggle {
+            position: fixed;
+            left: 280px;
+            top: 15px;
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 0 8px 8px 0;
+            padding: 12px 8px;
+            z-index: 1001;
+            transition: all 0.3s;
+            box-shadow: 3px 0 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .sidebar-toggle:hover {
+            background-color: #3498db;
+        }
+        .sidebar-toggle i {
+            font-size: 1.1rem;
+        }
+        .sidebar.collapsed {
+            left: -280px;
+        }
+        .sidebar-toggle.collapsed {
+            left: 0;
+        }
+        .user-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .user-item {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            background-color: rgba(255,255,255,0.05);
+        }
+        .user-item:hover {
+            background-color: rgba(255,255,255,0.1);
+            border-left-color: rgba(255,255,255,0.5);
+            transform: translateX(2px);
+        }
+        .user-item.active {
+            background-color: #3498db;
+            border-left-color: #ffffff;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+        }
+        .user-item .user-id {
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            color: #ecf0f1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .user-item .user-id::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #2ecc71;
+            margin-right: 10px;
+            box-shadow: 0 0 5px rgba(46, 204, 113, 0.5);
+        }
+        .user-item .timestamp {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.7);
+            margin-left: 18px;
+            margin-top: 4px;
+            font-style: italic;
+        }
+        .chat-container {
+            flex: 1;
+            padding: 25px;
+            margin-left: 280px;
+            transition: all 0.3s;
+            max-width: 1200px;
+            margin: 0 auto 0 280px;
+            background-color: #f8f9fa;
+        }
+        .chat-container.expanded {
+            margin-left: 0;
+        }
+        .chat-box {
+            height: 450px;
+            overflow-y: auto;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            background-color: white;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+        }
+        .user-message {
+            background-color: #3498db;
+            color: white;
+            border-radius: 18px 18px 0 18px;
+            padding: 12px 18px;
+            margin-bottom: 15px;
+            max-width: 70%;
+            margin-left: auto;
+            box-shadow: 0 2px 5px rgba(52, 152, 219, 0.2);
+            animation: fadeIn 0.3s ease;
+        }
+        .bot-message {
+            background-color: #f1f3f5;
+            color: #343a40;
+            border-radius: 18px 18px 18px 0;
+            padding: 12px 18px;
+            margin-bottom: 15px;
+            max-width: 70%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border-left: 3px solid #3498db;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .career-card {
+            border: none;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .career-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        .career-card h3 {
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #f1f3f5;
+            padding-bottom: 10px;
+        }
+        .skill-badge {
+            background-color: #6c757d;
+            color: white;
+            border-radius: 20px;
+            padding: 6px 12px;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            display: inline-block;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+        .skill-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+        }
+        .recommended-skill {
+            background-color: #27ae60;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 8px;
+            background-color: rgba(52, 152, 219, 0.05);
+        }
+        .spinner-border {
+            width: 1.5rem;
+            height: 1.5rem;
+            color: #3498db;
+        }
+        .azure-badge {
+            background-color: #0078d4;
+            color: white;
+            font-size: 0.8rem;
+            padding: 5px 10px;
+            border-radius: 20px;
+            margin-left: 10px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+        .intent-badge {
+            background-color: #9b59b6;
+            color: white;
+            font-size: 0.8rem;
+            padding: 5px 10px;
+            border-radius: 20px;
+            margin-left: 10px;
+            font-weight: 500;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            border-top: 1px solid #e9ecef;
+        }
+        #userIdInput {
+            width: 300px;
+        }
+        .btn {
+            white-space: nowrap;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        .btn:active {
+            transform: translateY(1px);
+        }
+        .btn-primary {
+            background-color: #3498db;
+            border-color: #3498db;
+        }
+        .btn-primary:hover {
+            background-color: #2980b9;
+            border-color: #2980b9;
+        }
+        .btn-danger {
+            background-color: #e74c3c;
+            border-color: #e74c3c;
+        }
+        .btn-danger:hover {
+            background-color: #c0392b;
+            border-color: #c0392b;
+        }
+        #newChatBtn {
+            background-color: #27ae60;
+            border-color: #27ae60;
+            transition: all 0.2s;
+            padding: 6px 12px;
+            font-size: 0.9rem;
+        }
+        #newChatBtn:hover {
+            background-color: #2ecc71;
+            border-color: #2ecc71;
+        }
+        .input-group {
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .form-control {
+            border: 1px solid #e9ecef;
+            padding: 12px 15px;
+            font-size: 1rem;
+        }
+        .form-control:focus {
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.25);
+            border-color: #3498db;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .sidebar {
+                left: -280px;
+            }
+            .sidebar-toggle {
+                left: 0;
+            }
+            .chat-container {
+                margin-left: 0;
+            }
+            .sidebar.active {
+                left: 0;
+            }
+            .sidebar-toggle.active {
+                left: 280px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Sidebar for user chats -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="mb-0">Chat History</h5>
+                    <button class="btn btn-sm btn-success" id="newChatBtn">
+                        <i class="bi bi-plus-lg"></i> New Chat
+                    </button>
+                </div>
+                <p >Select a chat to view its history</p>
+            </div>
+            <div id="sidebarLoading" class="text-center my-3">
+                <div class="spinner-border spinner-border-sm text-light" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <span class="ms-2">Loading chats...</span>
+            </div>
+            <ul class="user-list" id="userList">
+                <!-- User list will be populated here -->
+            </ul>
+        </div>
+
+        <!-- Sidebar toggle button -->
+        <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="bi bi-chevron-left" id="toggleIcon"></i>
+        </button>
+
+        <!-- Main chat area -->
+        <div class="chat-container" id="chatContainer">
+            <h1 class="text-center mb-4">Career Guidance Chatbot <span class="azure-badge">Azure AI</span></h1>
+
+            <div class="d-flex justify-content-end align-items-center mb-4">
+                <button class="btn btn-danger me-3" id="clearChatBtn">
+                    <i class="bi bi-trash me-1"></i> Clear Chat
+                </button>
+                <div id="syncStatus" class="text-success me-2 d-flex align-items-center" style="display: none;">
+                    <i class="bi bi-check-circle-fill me-1"></i>
+                    <span>Synced across browsers</span>
+                </div>
+            </div>
+
+            <div class="chat-box" id="chatBox">
+                <!-- Chat messages will appear here -->
+                <div class="bot-message" id="welcomeMessage">
+                    Hello! I'm your career guidance assistant powered by Azure AI. Tell me about your skills, and I'll suggest potential career paths for you.
+                </div>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <span class="ms-2">Thinking...</span>
+            </div>
+
+            <div class="input-group mb-4">
+                <input type="text" class="form-control" id="userInput" placeholder="Enter your skills or try 'hi', 'help', 'thank you', 'about'">
+                <button class="btn btn-primary" type="button" id="sendBtn">
+                    <i class="bi bi-send-fill me-1"></i> Send
+                </button>
+            </div>
+
+            <div id="resultsContainer"></div>
+
+            <div class="footer">
+                Powered by Azure AI Services: Language Understanding, Azure Functions, and Cosmos DB
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM elements
+            const chatBox = document.getElementById('chatBox');
+            const userInput = document.getElementById('userInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const loading = document.getElementById('loading');
+            const resultsContainer = document.getElementById('resultsContainer');
+            const clearChatBtn = document.getElementById('clearChatBtn');
+            const syncStatus = document.getElementById('syncStatus');
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const toggleIcon = document.getElementById('toggleIcon');
+            const chatContainer = document.getElementById('chatContainer');
+            const userList = document.getElementById('userList');
+            const sidebarLoading = document.getElementById('sidebarLoading');
+            const newChatBtn = document.getElementById('newChatBtn');
+
+            // User ID from server
+            const userId = "{{ user_id }}";
+            let currentUserId = userId;
+
+            // Store the user ID in localStorage for cross-browser access
+            localStorage.setItem('chatbotUserId', userId);
+
+            // Show sync status
+            syncStatus.style.display = 'block';
+
+            // Load chat history from server if available
+            const chatHistory = {{ chat_history|safe }};
+            if (chatHistory && chatHistory.length > 0) {
+                // Clear default welcome message
+                chatBox.innerHTML = '';
+
+                // Add messages from history
+                chatHistory.forEach(msg => {
+                    addMessage(msg.content, msg.role === 'user');
+                });
+            }
+
+            // Toggle sidebar
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                chatContainer.classList.toggle('expanded');
+                sidebarToggle.classList.toggle('collapsed');
+
+                if (sidebar.classList.contains('collapsed')) {
+                    toggleIcon.classList.remove('bi-chevron-left');
+                    toggleIcon.classList.add('bi-chevron-right');
+                } else {
+                    toggleIcon.classList.remove('bi-chevron-right');
+                    toggleIcon.classList.add('bi-chevron-left');
+                }
+            });
+
+            // Load all users
+            function loadAllUsers() {
+                sidebarLoading.style.display = 'block';
+                userList.innerHTML = '';
+
+                fetch('/api/users')
+                    .then(response => response.json())
+                    .then(data => {
+                        sidebarLoading.style.display = 'none';
+
+                        if (data.error) {
+                            userList.innerHTML = `<li class="text-danger">Error: ${data.error}</li>`;
+                            return;
+                        }
+
+                        if (!data.users || data.users.length === 0) {
+                            userList.innerHTML = '<li class="text-muted">No users found</li>';
+                            return;
+                        }
+
+                        // Add current user first with "Current Chat" label
+                        const currentUserItem = document.createElement('li');
+                        currentUserItem.className = 'user-item active';
+                        currentUserItem.dataset.userId = userId;
+
+                        // Find current user in the list to get its title
+                        const currentUserData = data.users.find(user => user.userId === userId);
+                        const currentChatTitle = currentUserData && currentUserData.chatTitle ?
+                            currentUserData.chatTitle : "Current Chat";
+
+                        currentUserItem.innerHTML = `
+                            <div class="user-id">${currentChatTitle}</div>
+                            <div class="timestamp">Current session</div>
+                        `;
+                        userList.appendChild(currentUserItem);
+
+                        // Add other users
+                        data.users.forEach(user => {
+                            // Skip current user as we already added it
+                            if (user.userId === userId) return;
+
+                            const userItem = document.createElement('li');
+                            userItem.className = 'user-item';
+                            userItem.dataset.userId = user.userId;
+
+                            // Format timestamp
+                            const timestamp = new Date(user.timestamp);
+                            const formattedDate = timestamp.toLocaleDateString();
+                            const formattedTime = timestamp.toLocaleTimeString();
+
+                            // Use chat title if available, otherwise use a default with user ID
+                            const chatTitle = user.chatTitle || `Chat ${user.userId.substring(0, 6)}...`;
+
+                            userItem.innerHTML = `
+                                <div class="user-id">${chatTitle}</div>
+                                <div class="timestamp">Last active: ${formattedDate} ${formattedTime}</div>
+                            `;
+                            userList.appendChild(userItem);
+                        });
+
+                        // Add click event to user items
+                        document.querySelectorAll('.user-item').forEach(item => {
+                            item.addEventListener('click', function() {
+                                const selectedUserId = this.dataset.userId;
+
+                                // Don't reload if clicking the same user
+                                if (selectedUserId === currentUserId) return;
+
+                                // Update active class
+                                document.querySelectorAll('.user-item').forEach(i => i.classList.remove('active'));
+                                this.classList.add('active');
+
+                                // Load chat history for selected user
+                                loadChatHistory(selectedUserId);
+
+                                // Update current user ID
+                                currentUserId = selectedUserId;
+                            });
+                        });
+                    })
+                    .catch(error => {
+                        sidebarLoading.style.display = 'none';
+                        userList.innerHTML = `<li class="text-danger">Error loading users: ${error.message}</li>`;
+                        console.error('Error loading users:', error);
+                    });
+            }
+
+            // Load chat history for a specific user
+            function loadChatHistory(userId) {
+                // Clear chat box and results
+                chatBox.innerHTML = '';
+                resultsContainer.innerHTML = '';
+
+                // Show loading indicator
+                loading.style.display = 'block';
+
+                fetch(`/api/chat_history?userId=${userId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        loading.style.display = 'none';
+
+                        if (data.error) {
+                            addMessage(`Error: ${data.error}`);
+                            return;
+                        }
+
+                        if (!data.history || data.history.length === 0) {
+                            addMessage("No chat history found for this user.");
+                            return;
+                        }
+
+                        // Add messages from history
+                        data.history.forEach(msg => {
+                            addMessage(msg.content, msg.role === 'user');
+                        });
+                    })
+                    .catch(error => {
+                        loading.style.display = 'none';
+                        addMessage(`Error loading chat history: ${error.message}`);
+                        console.error('Error loading chat history:', error);
+                    });
+            }
+
+            // New Chat button event
+            newChatBtn.addEventListener('click', function() {
+                // Generate a new random user ID
+                const newUserId = generateRandomId();
+
+                // Clear chat box and results
+                chatBox.innerHTML = '';
+                resultsContainer.innerHTML = '';
+
+                // Add welcome message
+                addMessage("Hello! I'm your career guidance assistant powered by Azure AI. Tell me about your skills, and I'll suggest potential career paths for you.");
+
+                // Update current user ID
+                currentUserId = newUserId;
+
+                // Update active class in sidebar
+                document.querySelectorAll('.user-item').forEach(i => i.classList.remove('active'));
+
+                // Add new user to the list
+                const newUserItem = document.createElement('li');
+                newUserItem.className = 'user-item active';
+                newUserItem.dataset.userId = newUserId;
+                newUserItem.innerHTML = `
+                    <div class="user-id">New Chat</div>
+                    <div class="timestamp">Just now</div>
+                `;
+
+                // Add click event to the new user item
+                newUserItem.addEventListener('click', function() {
+                    const selectedUserId = this.dataset.userId;
+
+                    // Don't reload if clicking the same user
+                    if (selectedUserId === currentUserId) return;
+
+                    // Update active class
+                    document.querySelectorAll('.user-item').forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+
+                    // Load chat history for selected user
+                    loadChatHistory(selectedUserId);
+
+                    // Update current user ID
+                    currentUserId = selectedUserId;
+                });
+
+                // Add to the top of the list
+                if (userList.firstChild) {
+                    userList.insertBefore(newUserItem, userList.firstChild);
+                } else {
+                    userList.appendChild(newUserItem);
+                }
+            });
+
+            // Generate a random ID for new chats
+            function generateRandomId() {
+                return Math.random().toString(36).substring(2, 10);
+            }
+
+            // Load all users when page loads
+            loadAllUsers();
+
+            // Clear chat button event
+            clearChatBtn.addEventListener('click', function() {
+                if (confirm('Are you sure you want to clear your chat history? This cannot be undone.')) {
+                    // Clear the chat box
+                    chatBox.innerHTML = '';
+                    resultsContainer.innerHTML = '';
+
+                    // Add welcome message
+                    addMessage("Hello! I'm your career guidance assistant powered by Azure AI. Tell me about your skills, and I'll suggest potential career paths for you.");
+
+                    // Clear chat history in the database
+                    fetch('/api/clear_chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            userId: currentUserId
+                        })
+                    })
+                    .then(() => {
+                        // Refresh the user list to show updated timestamps
+                        loadAllUsers();
+                    })
+                    .catch(error => {
+                        console.error('Error clearing chat:', error);
+                    });
+                }
+            });
+
+            // Function to add a message to the chat box
+            function addMessage(message, isUser = false) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = isUser ? 'user-message' : 'bot-message';
+                messageDiv.textContent = message;
+                chatBox.appendChild(messageDiv);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+
+            // Function to display career predictions
+            function displayResults(data) {
+                resultsContainer.innerHTML = '';
+
+                // Create card for top career
+                const topCareer = data.predictions[0];
+                const careerDetails = data.top_career_details;
+
+                const careerCard = document.createElement('div');
+                careerCard.className = 'career-card';
+
+                let careerHtml = `
+                    <h3>Recommended Career: ${topCareer.career}`;
+
+                // Add intent badge if language result is available
+                if (data.language_result && data.language_result.intent) {
+                    careerHtml += `<span class="intent-badge">Intent: ${data.language_result.intent}</span>`;
+                }
+
+                careerHtml += `</h3>
+                    <p>Confidence: ${(topCareer.confidence * 100).toFixed(2)}%</p>
+                    <h5>Common Skills for this Career:</h5>
+                    <div class="mb-3">
+                `;
+
+                // Add skill badges
+                if (careerDetails.skills && careerDetails.skills.length > 0) {
+                    const topSkills = careerDetails.skills.slice(0, 15); // Show top 15 skills
+                    topSkills.forEach(skill => {
+                        careerHtml += `<span class="skill-badge">${skill}</span>`;
+                    });
+                }
+
+                careerHtml += `
+                    </div>
+                    <h5>Other Potential Careers:</h5>
+                    <ul>
+                `;
+
+                // Add other career options
+                data.predictions.slice(1).forEach(pred => {
+                    careerHtml += `<li>${pred.career} (${(pred.confidence * 100).toFixed(2)}%)</li>`;
+                });
+
+                careerHtml += `
+                    </ul>
+                    <h5>Recommended Skills to Learn:</h5>
+                    <div>
+                `;
+
+                // Add recommended skills
+                if (data.recommended_skills && data.recommended_skills.length > 0) {
+                    data.recommended_skills.forEach(skill => {
+                        careerHtml += `<span class="skill-badge recommended-skill">${skill}</span>`;
+                    });
+                }
+
+                careerHtml += `</div>`;
+
+                // Add Azure info if available
+                if (data.language_result && data.language_result.entities && Object.keys(data.language_result.entities).length > 0) {
+                    careerHtml += `
+                        <div class="mt-3 pt-3 border-top">
+                            <small class="text-muted">Detected skills using Azure AI:</small>
+                            <div>
+                    `;
+
+                    // Show detected entities
+                    if (data.language_result.entities.Skills) {
+                        data.language_result.entities.Skills.forEach(skill => {
+                            careerHtml += `<span class="skill-badge">${skill}</span>`;
+                        });
+                    }
+
+                    careerHtml += `</div></div>`;
+                }
+
+                careerCard.innerHTML = careerHtml;
+                resultsContainer.appendChild(careerCard);
+            }
+
+            // Function to handle user input
+            function handleUserInput() {
+                const skills = userInput.value.trim();
+
+                if (skills === '') return;
+
+                // Add user message to chat
+                addMessage(skills, true);
+
+                // Clear input field
+                userInput.value = '';
+
+                // Show loading indicator
+                loading.style.display = 'block';
+
+                // Check if this is the first message in a new chat
+                const isFirstMessage = chatBox.childElementCount <= 1;
+
+                // If this is the first message, update the chat title in the sidebar
+                if (isFirstMessage) {
+                    // Create a chat title from the first message
+                    const chatTitle = skills.length > 30 ? skills.substring(0, 30) + "..." : skills;
+
+                    // Find and update the active chat item in the sidebar
+                    document.querySelectorAll('.user-item.active').forEach(item => {
+                        const userIdDiv = item.querySelector('.user-id');
+                        if (userIdDiv) {
+                            userIdDiv.textContent = chatTitle;
+                        }
+                    });
+                }
+
+                // Make API request
+                fetch('/api/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        skills: skills,
+                        userId: currentUserId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Hide loading indicator
+                    loading.style.display = 'none';
+
+                    if (data.error) {
+                        addMessage(`Error: ${data.error}`);
+                        return;
+                    }
+
+                    // Check if it's a conversational response (greeting, farewell, thanks, etc.)
+                    if (data.conversational) {
+                        // Add conversational response
+                        addMessage(data.response);
+                        // Clear results container
+                        resultsContainer.innerHTML = '';
+                        return;
+                    }
+
+                    // Add bot response for career prediction
+                    const topCareer = data.predictions[0].career;
+                    addMessage(`Based on your skills, I recommend exploring a career in ${topCareer}. Here are the details:`);
+
+                    // Display results
+                    displayResults(data);
+                })
+                .catch(error => {
+                    // Hide loading indicator
+                    loading.style.display = 'none';
+
+                    // Show error message
+                    addMessage(`Sorry, an error occurred: ${error.message}`);
+                    console.error('Error:', error);
+                });
+            }
+
+            // Function to get career details
+            function getCareerDetails(career) {
+                fetch(`/api/career_details?career=${encodeURIComponent(career)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        addMessage(`Error: ${data.error}`);
+                        return;
+                    }
+
+                    // Add bot response with career details
+                    let message = `Here are details about ${career}:\n`;
+                    message += `Common skills: ${data.skills.slice(0, 5).join(', ')}`;
+
+                    addMessage(message);
+                })
+                .catch(error => {
+                    addMessage(`Sorry, an error occurred: ${error.message}`);
+                    console.error('Error:', error);
+                });
+            }
+
+            // Function to recommend skills
+            function recommendSkills(userSkills) {
+                fetch('/api/recommend_skills', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ skills: userSkills })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        addMessage(`Error: ${data.error}`);
+                        return;
+                    }
+
+                    // Add bot response with skill recommendations
+                    let message = `Here are skills I recommend learning:\n`;
+                    message += data.recommended_skills.slice(0, 5).join(', ');
+
+                    addMessage(message);
+                })
+                .catch(error => {
+                    addMessage(`Sorry, an error occurred: ${error.message}`);
+                    console.error('Error:', error);
+                });
+            }
+
+            // Event listeners
+            sendBtn.addEventListener('click', handleUserInput);
+
+            userInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    handleUserInput();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

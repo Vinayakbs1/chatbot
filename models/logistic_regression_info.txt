@@ -1,0 +1,3 @@
+Model: LogisticRegression
+Number of classes: 6
+Classes: Artificial Intelligence, Data Science, Development, Security, Software Development and Engineering, User Experience (UX) and User Interface (UI) Design
